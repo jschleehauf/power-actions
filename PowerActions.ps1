@@ -1,13 +1,15 @@
 # Author: Jarratt Schleehauf
-# Last Edit: 01/05/2024
 # This PowerShell script allows a user with admin credentials to run Configuration Manager Actions
-# on a specified machine that is connected to the domain. 
-# Version 1
-# This version wraps the code in a try and catch block for error handling.
+# on a specified machine that is connected to the domain.
+# Last Edit: 01/10/2024 
+# Version 2.0
+# This version allows the user retry the computer name if entered incorrectly. Also indicates to the user
+# If the command ran successfully.
+ 
 
 # set variable for errors
-$retry
-
+$retry = $true
+$retrycount = 0
 
 do {
 	try {
@@ -46,12 +48,20 @@ Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{0
 }
 
 # Run the actions on the specified computer
-Invoke-Command -ComputerName $computerName -ScriptBlock $actions
-
+Invoke-Command -ComputerName $computerName -ScriptBlock $actions -ErrorAction Stop
 # Change variable to false since execution successful.
-$retry = false
+$retry = $false
+
+
+
+
 }
 	catch {
+		$ErrorMessage = $_.Exception.Message
 		$retryCount++
+		Write-Host "$retryCount retries, error occurred.  `n $ErrorMessage" -ForegroundColor Red -BackgroundColor Black
+		
 	}
 } while ($retry)
+Write-Host " Command Successful"
+
