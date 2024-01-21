@@ -2,14 +2,14 @@
 # This PowerShell script allows a user with admin credentials to run Configuration Manager Actions
 # on a specified machine that is connected to the domain.
 # Last Edit: 01/10/2024 
-# Version 2.0
-# This version allows the user retry the computer name if entered incorrectly. Also indicates to the user
-# If the command ran successfully.
+# Version 3.0
+# This version prompts the user if they want to run the command on another computer or exit the script.
  
 
 # set variable for errors
 $retry = $true
 $retrycount = 0
+
 
 do {
 	try {
@@ -49,19 +49,25 @@ Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{0
 
 # Run the actions on the specified computer
 Invoke-Command -ComputerName $computerName -ScriptBlock $actions -ErrorAction Stop
-# Change variable to false since execution successful.
-$retry = $false
 
 
+# Inform user the command executed successfully.
+Write-Host " Command Successful"
+
+#Prompt the user to determine if they want to exit or run command on another machine.
+$UserSelection = Read-Host "Enter 0 to exit or 1 to run the command on another computer."
 
 
+if ($UserSelection -eq 0) {
+	$retry = $false
 }
-	catch {
+write-host "$UserSelection"
+} catch {
 		$ErrorMessage = $_.Exception.Message
 		$retryCount++
-		Write-Host "$retryCount retries, error occurred.  `n $ErrorMessage" -ForegroundColor Red -BackgroundColor Black
+		Write-Host "$retryCount retries, error occurred.  `n $ErrorMessage" 
 		
 	}
 } while ($retry)
-Write-Host " Command Successful"
+
 
